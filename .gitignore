@@ -1,0 +1,17 @@
+# LaTeX 编译生成文件
+*.pdf
+*.aux
+*.log
+*.synctex.gz
+*.out
+*.bbl
+*.blg
+*.toc
+*.lot
+*.lof
+
+# Python 运行缓存
+__pycache__/
+
+# 记账 app 的本地数据（私人花销记录，不入库）
+每日记账App/records.db
