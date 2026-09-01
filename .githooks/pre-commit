@@ -1,0 +1,3 @@
+#!/bin/sh
+# gitcommit 质量门禁入口：转发到 Python 实现，避免 Windows 下 sh 处理中文路径和 CRLF 的坑。
+exec python .githooks/pre-commit.py
