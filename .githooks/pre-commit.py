@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# gitcommit 质量门禁：pre-commit hook 的实际逻辑。
+# 提交质量门禁：pre-commit hook 的实际逻辑。
 # 检查 save-gate/ 下的两个"通过标记"（test.passed、quality.passed），
 # 每个待提交的 .py 文件都必须被检查过、且检查后没再被改动，否则拦下提交。
 import subprocess
@@ -17,7 +17,7 @@ def git(*args):
 
 def block(msg):
     print("⛔ 拦截：", msg, file=sys.stderr)
-    print("   请先运行 gitcommit：单元测试和质量审查通过后会自动生成标记。", file=sys.stderr)
+    print("   请先运行 git-save：单元测试和质量审查通过后会自动生成标记。", file=sys.stderr)
     sys.exit(1)
 
 
@@ -73,13 +73,13 @@ for f in staged_py:
     in_test = f in test_files
     in_quality = f in quality_files
     if not in_test and not in_quality:
-        block(f"文件 {f} 既没被单元测试也没被质量审查覆盖，请运行 gitcommit 重新检查")
+        block(f"文件 {f} 既没被单元测试也没被质量审查覆盖，请运行 git-save 重新检查")
     if in_test:
         if (ROOT / f).stat().st_mtime > test_mtime:
-            block(f"文件 {f} 在单元测试之后又被改动过，标记已失效，请运行 gitcommit 重新检查")
+            block(f"文件 {f} 在单元测试之后又被改动过，标记已失效，请运行 git-save 重新检查")
     if in_quality:
         if (ROOT / f).stat().st_mtime > quality_mtime:
-            block(f"文件 {f} 在质量审查之后又被改动过，标记已失效，请运行 gitcommit 重新检查")
+            block(f"文件 {f} 在质量审查之后又被改动过，标记已失效，请运行 git-save 重新检查")
 
 print("✅ 单元测试和质量审查都通过，放行。")
 sys.exit(0)
