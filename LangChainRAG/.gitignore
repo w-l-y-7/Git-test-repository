@@ -1,0 +1,18 @@
+# 虚拟环境
+.venv/
+
+# API 密钥，绝不允许提交到 git
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# Milvus 本地向量库文件（Milvus Lite 引擎的数据）
+milvus_lite.db
+
+# 上传的文档原件（用户内容，不入库）
+data/uploads/
+
+# 本地数据库文件
+langchain_rag.db

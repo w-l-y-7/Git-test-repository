@@ -1,0 +1,14 @@
+# 本项目依赖清单（以后装环境/部署时一条命令搞定：pip install -r requirements.txt）
+fastapi
+uvicorn[standard]
+langchain
+langchain-community
+langchain-alibaba
+dashscope
+python-dotenv
+pymilvus[milvus_lite]
+sqlalchemy
+bcrypt
+PyJWT
+python-multipart
+pypdf
