@@ -4,8 +4,30 @@ from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import TypeDecorator
 
 from .database import Base
+
+
+class UTCDateTime(TypeDecorator):
+    """时间戳列类型：数据库里存不带时区的 UTC，读写时自动去/补 UTC 标记
+
+    原因：MySQL 的 DATETIME 没有时区概念，直接写带时区的时间会报错或存错；
+    统一存 UTC、读出来再补上 UTC 标记，前端 new Date() 才能正确换算成本地时间。
+    """
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is not None and value.tzinfo is not None:
+            return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None and value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
 
 
 class User(Base):
@@ -17,7 +39,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(128))  # bcrypt 加密后的密码
     role: Mapped[str] = mapped_column(String(20), default="user")  # "user" 或 "admin"
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Document(Base):
@@ -31,7 +53,7 @@ class Document(Base):
     stored_path: Mapped[str] = mapped_column(String(255), default="")  # 存在 uploads 里的相对文件名
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)  # 切成多少片段入库
     created_by: Mapped[str] = mapped_column(String(50))  # 上传人用户名（快照）
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Conversation(Base):
@@ -42,8 +64,8 @@ class Conversation(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)  # 属于哪个用户
     title: Mapped[str] = mapped_column(String(100), default="新会话")  # 列表里显示的名字
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Message(Base):
@@ -56,4 +78,4 @@ class Message(Base):
     role: Mapped[str] = mapped_column(String(20))  # "user" 提问 / "assistant" 回答
     content: Mapped[str] = mapped_column(Text)  # 消息内容（可能很长，用 Text 不限长）
     sources: Mapped[str] = mapped_column(Text, default="[]")  # 回答引用的片段，存成 JSON 字符串
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=lambda: datetime.now(timezone.utc))

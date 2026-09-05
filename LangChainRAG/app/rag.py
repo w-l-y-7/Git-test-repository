@@ -11,11 +11,13 @@ import os
 from langchain_community.chat_models.tongyi import ChatTongyi
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from . import vector_store
+from . import reranker, vector_store
 from .config import (
     ALLOWED_EXTENSIONS,
     DATA_DIR,
+    MOCK_DASHSCOPE,
     MODEL_NAME,
+    RETRIEVAL_CANDIDATES,
     TOP_K,
     UPLOAD_DIR,
 )
@@ -176,18 +178,21 @@ def ensure_kb_ready(db):
 
 # ============ 问答 ============
 
-def ask(question: str) -> tuple[str, list[str]]:
-    """核心问答流程：检索相关片段 → 通义千问基于资料回答
+def retrieve(question: str) -> tuple[list[str], str]:
+    """检索增强：粗筛 + 精排，找出最该喂给大模型的 TOP_K 段原文
 
-    返回 (答案文本, 引用的片段列表)
+    第 8 步起：先按语义粗筛出更多候选（RETRIEVAL_CANDIDATES 段），
+    再用 reranker 做 BM25 关键词融合精排，取 TOP_K 段。
+    返回 (引用的片段列表, 拼好的上下文文本)
     """
-    # 1) 在全知识库（所有文档）里检索与问题语义最接近的 TOP_K 段原文
-    sources = vector_store.search(question, TOP_K)
-    context = "\n\n".join(sources)
+    candidates = vector_store.search(question, RETRIEVAL_CANDIDATES)
+    sources = reranker.rerank(question, candidates)
+    return sources, "\n\n".join(sources)
 
-    # 2) 把资料 + 问题拼成提示词，交给大模型
-    llm = ChatTongyi(model=MODEL_NAME)
-    prompt = f"""你是"金融知识库问答助手"，由阿里云通义千问大模型（模型名 qwen-plus，DashScope 平台）驱动，运行在一个金融知识库问答系统里，回答会引用知识库原文作为依据。
+
+def build_prompt(question: str, context: str) -> str:
+    """把资料 + 问题拼成给大模型的提示词（规则固定，检索出的片段会变化）"""
+    return f"""你是"金融知识库问答助手"，由阿里云通义千问大模型（模型名 qwen-plus，DashScope 平台）驱动，运行在一个金融知识库问答系统里，回答会引用知识库原文作为依据。
 
 回答规则：
 1. 如果用户是在问系统本身（例如"你是什么模型""你是谁""谁开发的""怎么用"），或者只是打招呼闲聊，直接用上面的自我介绍如实回答即可。
@@ -200,5 +205,36 @@ def ask(question: str) -> tuple[str, list[str]]:
 
 【回答】"""
 
-    answer = llm.invoke(prompt).content
+
+def stream_answer(prompt: str):
+    """逐段产出大模型的回答文字（给流式接口用，边生成边下发）
+
+    通义千问原生支持流式返回，这里把每一小块内容 yield 出去；
+    谁消费谁拼接，这样浏览器能"打字机"一样逐字显示。
+    """
+    # streaming=True 很关键：不传的话通义千问会把整段回答一次性返回，
+    # 前端就看不到"逐字打出"的效果（实测默认 stream 只回 1 块）
+    llm = ChatTongyi(model=MODEL_NAME, streaming=True)
+    for chunk in llm.stream(prompt):
+        piece = chunk.content if isinstance(chunk.content, str) else ""
+        if piece:
+            yield piece
+
+
+def ask(question: str) -> tuple[str, list[str]]:
+    """核心问答流程：检索相关片段 → 通义千问基于资料回答（一次性等完整答案）
+
+    返回 (答案文本, 引用的片段列表)。流式接口请用 retrieve + stream_answer。
+    """
+    sources, context = retrieve(question)
+
+    if MOCK_DASHSCOPE:
+        # 离线压测/演示模式：跳过通义千问，检索是真实的，返回固定格式回答
+        answer = (
+            f"（离线模式模拟回答，未调用通义千问）关于「{question}」，"
+            f"已从知识库检索到 {len(sources)} 条相关片段，可参考下列资料。"
+        )
+        return answer, sources
+
+    answer = "".join(stream_answer(build_prompt(question, context)))
     return answer, sources

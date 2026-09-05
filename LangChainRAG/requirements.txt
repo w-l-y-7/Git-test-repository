@@ -12,3 +12,11 @@ bcrypt
 PyJWT
 python-multipart
 pypdf
+
+# MySQL（第 8 步：业务库从 SQLite 换成 MySQL，走 Docker compose）
+pymysql
+cryptography
+
+# 检索增强（BM25 关键词 + 语义排名融合重排）
+jieba
+rank_bm25

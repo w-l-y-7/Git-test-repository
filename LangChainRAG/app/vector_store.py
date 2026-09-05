@@ -13,13 +13,14 @@ import logging
 
 from langchain_community.embeddings import DashScopeEmbeddings
 
-from .config import EMBEDDING_MODEL, MILVUS_COLLECTION, MILVUS_URI
+from .config import EMBEDDING_MODEL, MOCK_DASHSCOPE, MILVUS_COLLECTION, MILVUS_URI
 
 logger = logging.getLogger("uvicorn.error")
 
 _client = None
 _emb = None
 _dim = None
+_loaded = False  # 集合是否已 load：检索前必须 load，只成功过一次才置 True
 
 
 def _embeddings() -> DashScopeEmbeddings:
@@ -68,12 +69,19 @@ def _ensure_collection(client) -> None:
 
 def get_client():
     """全局只建一个客户端连接，多线程请求复用它"""
-    global _client
+    global _client, _loaded
     if _client is None:
         from pymilvus import MilvusClient
 
         _client = MilvusClient(MILVUS_URI)
         _ensure_collection(_client)
+    if not _loaded:
+        # 集合可能停在 released 状态，检索前要 load 一次（成功过就不再重复调）
+        try:
+            _client.load_collection(MILVUS_COLLECTION)
+            _loaded = True
+        except Exception as exc:
+            logger.warning("[milvus] 集合 load 未成功（%s），下次检索会重试", exc)
     return _client
 
 
@@ -90,9 +98,35 @@ def add_texts(doc_id: int, texts: list[str]) -> int:
     return len(texts)
 
 
+def _random_query_vec() -> list[float]:
+    """离线压测模式：跳过阿里云向量化，随机造一个归一化向量去 Milvus 真检索
+
+    维度从集合 schema 里读，保证和已存向量一致；归一化是为匹配余弦度量。
+    """
+    import math
+    import random
+
+    schema = get_client().describe_collection(MILVUS_COLLECTION)
+    dim = None
+    for field in schema.get("fields", []):
+        if field.get("name") == "vector":
+            dim = (field.get("params") or {}).get("dim")
+            break
+    if not dim:
+        raise RuntimeError("读不到向量字段维度，离线模式无法检索")
+
+    vec = [random.uniform(-1, 1) for _ in range(dim)]
+    norm = math.sqrt(sum(x * x for x in vec))
+    return [x / norm for x in vec]
+
+
 def search(question: str, k: int) -> list[str]:
     """把问题向量化，在全集合里找语义最接近的 k 段原文"""
-    query_vec = _embeddings().embed_query(question)
+    if MOCK_DASHSCOPE:
+        # 压测/演示模式：不花钱不调阿里云，随机向量照常走 Milvus 真检索
+        query_vec = _random_query_vec()
+    else:
+        query_vec = _embeddings().embed_query(question)
     result = get_client().search(
         collection_name=MILVUS_COLLECTION,
         data=[query_vec],

@@ -16,3 +16,6 @@ data/uploads/
 
 # 本地数据库文件
 langchain_rag.db
+# ===== git-ignore 自动整理 2026-09-05 =====
+## A 脚本产物
+langchain_rag_stress_report.csv

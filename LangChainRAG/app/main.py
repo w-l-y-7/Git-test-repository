@@ -1,20 +1,23 @@
 """FastAPI 入口：把 RAG 服务包成 HTTP 接口，浏览器就能通过网址来调用"""
 
+import json
 import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from .auth_router import router as auth_router
+from .config import MOCK_DASHSCOPE
+from .conversations_router import _get_own_conversation, save_turn
 from .conversations_router import router as conversations_router
-from .conversations_router import save_turn
 from .documents_router import router as documents_router
-from .database import get_db, init_db
+from .database import SessionLocal, get_db, init_db
 from .db_models import User
 from .models import AskRequest, AskResponse, SourceItem
-from .rag import ask
+from .rag import ask, build_prompt, retrieve, stream_answer
 from .security import get_current_user
 
 # 用 uvicorn 的日志器，错误会打到服务器控制台，方便排查问题
@@ -77,4 +80,75 @@ def ask_question(
         answer=answer,
         sources=[SourceItem(content=s) for s in sources],
         conversation_id=conversation_id,
+    )
+
+
+def _sse(obj) -> str:
+    """把一个对象包成 SSE 帧：data: {...} 后面跟一个空行"""
+    return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
+
+
+@app.post("/api/ask/stream")
+def ask_question_stream(
+    req: AskRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """流式问答接口（SSE 打字机效果）：用法和 /api/ask 一样，只是答案分片下发
+
+    事件格式（每帧一个 JSON）：
+      data: {"type":"delta","text":"..."}              生成中的文字增量
+      data: {"type":"done","conversation_id":1,"sources":[...]}   结束
+      data: {"type":"error","detail":"..."}            中途出错
+    """
+    # 带了会话 id 就先确认归属，避免流式生成到一半才发现 404
+    if req.conversation_id is not None:
+        _get_own_conversation(db, req.conversation_id, current_user.id)
+
+    # 检索（粗筛 + 精排）在出流前完成，期间前端显示"正在检索…"
+    if MOCK_DASHSCOPE:
+        answer, sources = ask(req.question)  # 离线模式整段就是假回答，直接备好
+        prompt = None
+    else:
+        sources, context = retrieve(req.question)
+        prompt = build_prompt(req.question, context)
+        answer = None
+
+    def generate():
+        try:
+            if answer is not None:
+                yield _sse({"type": "delta", "text": answer})
+                final_answer = answer
+            else:
+                parts = []
+                for piece in stream_answer(prompt):
+                    parts.append(piece)
+                    yield _sse({"type": "delta", "text": piece})
+                final_answer = "".join(parts)
+
+            # 用独立数据库会话落库（生成器跑在线程池，不能用请求作用域的那个 Session）
+            with SessionLocal() as db2:
+                conversation_id = save_turn(
+                    db2,
+                    current_user.id,
+                    req.conversation_id,
+                    req.question,
+                    final_answer,
+                    sources,
+                )
+            yield _sse(
+                {
+                    "type": "done",
+                    "conversation_id": conversation_id,
+                    "sources": sources,
+                }
+            )
+        except Exception:
+            logger.exception("流式问答接口处理出错")
+            yield _sse({"type": "error", "detail": "生成中断了，请稍后再试"})
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache"},
     )

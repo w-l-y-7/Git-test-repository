@@ -28,6 +28,10 @@ MODEL_NAME = "qwen-plus"
 # 向量化模型：阿里云 text-embedding-v3，和通义千问同一个 key
 EMBEDDING_MODEL = "text-embedding-v3"
 
+# 离线压测/演示开关：设环境变量 MOCK_DASHSCOPE=1 时，向量化和大模型都用本地假实现，
+# 不调阿里云（免费、不占额度、不会限流）。默认关闭，行为跟原来完全一样。
+MOCK_DASHSCOPE = os.getenv("MOCK_DASHSCOPE") == "1"
+
 # 文档放 data 文件夹
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
@@ -43,11 +47,25 @@ UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 # 上传允许的文件类型（限制后缀，防上传乱七八糟的文件）
 ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf"}
 
-# 数据库：现在用 SQLite（一个文件，零安装）。
-# 以后部署换 MySQL，只需把这一行改成
-#   DB_URL = "mysql+pymysql://用户名:密码@localhost:3306/langchainrag"
-# 其余代码不用动（SQLAlchemy 屏蔽了数据库差异）
-DB_URL = f"sqlite:///{os.path.join(BASE_DIR, 'langchain_rag.db')}"
+# ===== 数据库（第 8 步起用 MySQL，一条 docker compose up -d 就能起）=====
+# 连接参数默认值和 docker-compose.yml 的开发账号一致，平时不用改；
+# 正式部署把这些写进 .env 覆盖即可。
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_USER = os.getenv("DB_USER", "rag")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "rag_dev_pass")
+DB_NAME = os.getenv("DB_NAME", "langchainrag")
 
-# 问答时每次检索几个相关片段喂给大模型
+# 想临时回到 SQLite（比如这台机器不想开 MySQL）：在 .env 里加一行
+#   DB_URL=sqlite:///C:/你电脑上的路径/LangChainRAG/langchain_rag.db
+# SQLAlchemy 屏蔽了不同数据库的差异，换库不用改业务代码。
+DB_URL = os.getenv(
+    "DB_URL",
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4",
+)
+
+# 问答时每次喂给大模型的最终片段数
 TOP_K = 3
+
+# 检索增强：先按语义粗筛更多候选，再精排取 TOP_K 个（见 app/reranker.py）
+RETRIEVAL_CANDIDATES = 15

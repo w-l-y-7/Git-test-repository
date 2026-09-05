@@ -1,0 +1,29 @@
+# 用 Docker 一键起 MySQL（开发环境用）。
+# 用法：在 LangChainRAG 目录下执行  docker compose up -d
+# 密码仅开发用，正式部署请在 .env 里覆盖 DB_* 变量
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: langchainrag-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_pass     # 仅本地开发用，别拿去部署
+      MYSQL_DATABASE: langchainrag
+      MYSQL_USER: rag
+      MYSQL_PASSWORD: rag_dev_pass           # 仅本地开发用，别拿去部署
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql   # 数据落盘，容器删了数据还在
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_dev_pass"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mysql_data:

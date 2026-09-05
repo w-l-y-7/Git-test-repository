@@ -18,3 +18,10 @@ __pycache__/
 
 # 提交质量门禁的通过标记（临时生成，不入库）
 save-gate/
+
+# ===== git-ignore 自动整理 2026-09-05 =====
+## A 脚本产物
+china_pop_2016_2026_2036.csv
+china_pop_pyramid_2016_2026_2036.png
+## 已取消跟踪的杂项垃圾（git rm --cached 过，补忽略防再次入库）
+test.tex

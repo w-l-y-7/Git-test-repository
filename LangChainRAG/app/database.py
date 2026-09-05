@@ -8,8 +8,11 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from .config import DB_URL
 
-# 连接数据库（SQLite 是单个文件，check_same_thread=False 允许 FastAPI 多线程访问）
-engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+# 连接数据库。注意：check_same_thread 只对 SQLite 有意义（它单文件需要允许多线程），
+# MySQL 不能传这个参数（pymysql 不认识会报错），所以只对 SQLite 加。
+# pool_pre_ping：每次取连接前先探活，MySQL 容器重启过也能自动恢复，不会一直连死。
+_connect_args = {"check_same_thread": False} if DB_URL.startswith("sqlite") else {}
+engine = create_engine(DB_URL, connect_args=_connect_args, pool_pre_ping=True)
 
 # SessionLocal 是"和数据库对话"的会话工厂，每次请求创建一个
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)

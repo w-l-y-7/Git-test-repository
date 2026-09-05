@@ -118,8 +118,6 @@ async function submit() {
           {{ mode === 'login' ? '登 录' : '注 册' }}
         </el-button>
       </el-form>
-
-      <div class="tip">演示管理员：wly / 123456</div>
     </el-card>
   </div>
 </template>
@@ -168,12 +166,5 @@ async function submit() {
 .submit {
   width: 100%;
   margin-top: 4px;
-}
-
-.tip {
-  margin-top: 14px;
-  text-align: center;
-  font-size: 12px;
-  color: #a8abb2;
 }
 </style>

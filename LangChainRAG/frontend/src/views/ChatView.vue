@@ -1,7 +1,8 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 
 import api from '../api'
+import { askStream } from '../sse'
 
 // ---------- 状态 ----------
 const sessions = ref([]) // 会话列表
@@ -67,16 +68,43 @@ async function send() {
   if (!text || sending.value) return
   question.value = ''
   sending.value = true
+
+  // 先在本地放上"我提问的"和"AI 空的"两条气泡，AI 的内容在流式过程中逐字变多
+  const userMsg = {
+    id: `u-${Date.now()}`,
+    role: 'user',
+    content: text,
+    sources: [],
+    created_at: new Date().toISOString(),
+  }
+  const live = reactive({
+    id: 'live',
+    role: 'assistant',
+    content: '',
+    sources: [],
+    created_at: new Date().toISOString(),
+  })
+  messages.value.push(userMsg)
+  messages.value.push(live)
+  scrollDown()
+
   try {
-    // 没打开会话就传空 conversation_id，后端会自动新建一个会话
-    const resp = await api.post('/ask', {
+    // 流式：每来一小块文字就拼到 AI 气泡上；整段结束 resolve 出 done 事件
+    const done = await askStream({
       question: text,
-      conversation_id: activeId.value || null,
+      conversation_id: activeId.value,
+      onDelta(piece) {
+        live.content += piece
+        scrollDown()
+      },
     })
-    // 服务器是权威：以刚存的记录为准重新拉一次，保证标题/顺序都对
-    if (!activeId.value) activeId.value = resp.conversation_id
+    // 没开会话时后端自动建了会话，这里补上，随后以服务器记录为准重拉一遍
+    if (!activeId.value) activeId.value = done.conversation_id
     await loadMessages(activeId.value)
     listSessions()
+  } catch (e) {
+    live.content = (live.content ? `${live.content}\n\n` : '') + `⚠️ ${e?.message || '生成出错，请重试'}`
+    scrollDown()
   } finally {
     sending.value = false
   }
@@ -168,7 +196,11 @@ listSessions()
             <div class="bubble-wrap">
               <div v-if="m.role === 'assistant'" class="ai-line">
                 <span class="ai-tag">AI</span>
-                <div class="bubble">{{ m.content }}</div>
+                <div v-if="m.id === 'live' && !m.content" class="bubble typing">
+                  <span class="dots"><i /><i /><i /></span>
+                  <span class="typing-text">正在检索知识库并思考…</span>
+                </div>
+                <div v-else class="bubble">{{ m.content }}</div>
               </div>
               <div v-else class="bubble user-bubble">{{ m.content }}</div>
 
@@ -195,20 +227,6 @@ listSessions()
             </div>
           </div>
 
-          <!-- 思考中占位 -->
-          <div v-if="sending" class="msg-row assistant">
-            <div class="bubble-wrap">
-              <div class="ai-line">
-                <span class="ai-tag">AI</span>
-                <div class="bubble typing">
-                  <span class="dots">
-                    <i /><i /><i />
-                  </span>
-                  <span class="typing-text">正在检索知识库并思考…</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </template>
       </div>
 
