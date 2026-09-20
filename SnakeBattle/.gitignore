@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+
+# 隧道工具，55MB 的二进制，不入库（要用就双击「下载隧道工具.bat」）
+cloudflared.exe

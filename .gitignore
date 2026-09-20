@@ -25,3 +25,11 @@ china_pop_2016_2026_2036.csv
 china_pop_pyramid_2016_2026_2036.png
 ## 已取消跟踪的杂项垃圾（git rm --cached 过，补忽略防再次入库）
 test.tex
+
+# ===== evaluate 三层评估的存档（历史留档，不入库）=====
+.claude/skills/evaluate/reports/
+
+# ===== git-ignore 自动整理 2026-09-20 =====
+## A 脚本产物
+china_gdp_growth_2016_2046.png
+Academic PPT/slides_fintech-digital-transformation/04_exports/*.png

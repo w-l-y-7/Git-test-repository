@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贪吃蛇对战</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px;
+    padding: 20px;
+    background: #0d0f16;
+    color: #e8eaf2;
+    font-family: system-ui, "Microsoft YaHei", sans-serif;
+  }
+
+  [hidden] { display: none !important; }
+
+  /* ---------- 大厅 ---------- */
+  .panel {
+    width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 28px 24px;
+    border: 1px solid #1e2230;
+    border-radius: 16px;
+    background: #12141c;
+  }
+  .panel h1 {
+    font-size: 20px; font-weight: 600; letter-spacing: 3px;
+    text-align: center; margin-bottom: 6px;
+  }
+
+  button {
+    padding: 12px 18px;
+    border: none; border-radius: 10px;
+    background: #34d399; color: #0d0f16;
+    font-size: 15px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  button:hover { filter: brightness(1.1); }
+  button.ghost { background: #1e2230; color: #c3c8d8; }
+
+  .join-row { display: flex; gap: 8px; }
+  .join-row input {
+    flex: 1; min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #262b3b; border-radius: 10px;
+    background: #0d0f16; color: #e8eaf2;
+    font-size: 16px; font-family: inherit;
+    letter-spacing: 4px; text-align: center;
+  }
+  .join-row input:focus { outline: none; border-color: #34d399; }
+  .join-row button { flex: 0 0 auto; }
+
+  .msg { font-size: 13px; color: #8a90a8; text-align: center; min-height: 18px; }
+  .msg.bad { color: #f87171; }
+
+  /* ---------- 等对方 ---------- */
+  .code {
+    font-size: 46px; font-weight: 700; letter-spacing: 10px;
+    text-align: center; color: #34d399;
+    font-variant-numeric: tabular-nums;
+  }
+  .label { font-size: 13px; color: #8a90a8; text-align: center; }
+
+  /* ---------- 游戏 ---------- */
+  #game { width: 100%; max-width: 820px; display: flex; flex-direction: column; gap: 10px; }
+
+  .scores {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 15px; color: #8a90a8;
+  }
+  .scores span { display: flex; align-items: center; gap: 7px; }
+  .scores i { width: 11px; height: 11px; border-radius: 3px; display: block; }
+  .scores b { font-size: 20px; color: #e8eaf2; }
+  .dot-a { background: #34d399; }
+  .dot-b { background: #a78bfa; }
+
+  .stage { position: relative; }
+
+  canvas { display: block; width: 100%; height: auto; border-radius: 12px; background: #12141c; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    border-radius: 12px;
+    background: rgba(13, 15, 22, .85);
+    backdrop-filter: blur(3px);
+  }
+  .overlay p { font-size: 30px; font-weight: 600; }
+  .overlay button { padding: 12px 30px; }
+
+  .status { font-size: 13px; color: #4a5068; }
+  .status.bad { color: #f87171; }
+</style>
+</head>
+<body>
+
+<!-- 大厅 -->
+<div class="panel" id="lobby">
+  <h1>贪吃蛇对战</h1>
+  <button id="btnCreate">创建房间</button>
+  <div class="join-row">
+    <input id="roomInput" maxlength="4" inputmode="numeric" placeholder="房间号">
+    <button class="ghost" id="btnJoin">加入</button>
+  </div>
+  <p class="msg" id="lobbyMsg"></p>
+</div>
+
+<!-- 等对方进来 -->
+<div class="panel" id="waiting" hidden>
+  <p class="label">把这个房间号发给对方</p>
+  <p class="code" id="roomCode">----</p>
+  <p class="msg" id="waitMsg">等待对方加入…</p>
+</div>
+
+<!-- 游戏 -->
+<div id="game" hidden>
+  <div class="scores">
+    <span><i class="dot-a"></i><em id="nameA">玩家 A</em><b id="scoreA">0</b></span>
+    <span><i class="dot-b"></i><em id="nameB">玩家 B</em><b id="scoreB">0</b></span>
+  </div>
+  <div class="stage">
+    <canvas id="board"></canvas>
+    <div class="overlay" id="overlay" hidden>
+      <p id="overlayText"></p>
+      <button id="btnAgain">再来一局</button>
+    </div>
+  </div>
+</div>
+
+<p class="status" id="status">正在连接服务器…</p>
+
+<script>
+/* ---------- 常数 ---------- */
+const COLS = 40, ROWS = 30, CELL = 20;
+
+const COLOR = {
+  food:     '#fbbf24',
+  aBody:    '#34d399', aHead: '#6ee7b7',   // 玩家 A
+  bBody:    '#a78bfa', bHead: '#c4b5fd',   // 玩家 B
+};
+
+const KEYS = {
+  ArrowUp: 'up',    w: 'up',    W: 'up',
+  ArrowDown: 'down', s: 'down',  S: 'down',
+  ArrowLeft: 'left', a: 'left',  A: 'left',
+  ArrowRight: 'right', d: 'right', D: 'right',
+};
+
+/* ---------- 元素 ---------- */
+const $ = id => document.getElementById(id);
+const lobby = $('lobby'), waiting = $('waiting'), game = $('game');
+const lobbyMsg = $('lobbyMsg'), waitMsg = $('waitMsg'), status = $('status');
+const overlay = $('overlay'), overlayText = $('overlayText');
+
+const canvas = $('board');
+const ctx = canvas.getContext('2d');
+canvas.width = COLS * CELL;
+canvas.height = ROWS * CELL;
+
+/* ---------- 状态 ---------- */
+let role = null;        // "a" 或 "b"
+let state = null;       // 服务器发来的最新局面
+let playing = false;
+
+/* ---------- 连服务器 ---------- */
+const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+const ws = new WebSocket(`${scheme}://${location.host}/ws`);
+
+ws.onopen = () => {
+  status.className = 'status ok';
+  status.textContent = '已连上服务器';
+};
+ws.onclose = () => {
+  status.className = 'status bad';
+  status.textContent = '连接断了，刷新页面重试';
+  playing = false;
+};
+
+ws.onmessage = (e) => {
+  const msg = JSON.parse(e.data);
+
+  switch (msg.type) {
+    case 'joined':
+      role = msg.role;
+      // 自己是哪条蛇，就在名字后面标一个「你」
+      $(msg.role === 'a' ? 'nameA' : 'nameB').textContent += '（你）';
+      if (msg.waiting) {
+        lobby.hidden = true;
+        waiting.hidden = false;
+        $('roomCode').textContent = msg.room;
+      }
+      break;
+
+    case 'start':
+      lobby.hidden = true;
+      waiting.hidden = true;
+      game.hidden = false;
+      overlay.hidden = true;
+      playing = true;
+      break;
+
+    case 'state':
+      state = msg;
+      draw();
+      if (msg.over) {
+        playing = false;
+        overlayText.textContent =
+          msg.winner === 'draw' ? '同归于尽' :
+          msg.winner === role  ? '你赢了 🎉' : '对方赢了';
+        overlay.hidden = false;
+      }
+      break;
+
+    case 'error':
+      lobbyMsg.className = 'msg bad';
+      lobbyMsg.textContent = msg.msg;
+      break;
+
+    case 'peer_left':
+      playing = false;
+      overlayText.textContent = '对方掉线了';
+      $('btnAgain').hidden = true;
+      overlay.hidden = false;
+      break;
+  }
+};
+
+/* ---------- 画 ---------- */
+function draw() {
+  if (!state) return;
+
+  ctx.fillStyle = '#12141c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = '#1b1e2a';
+  ctx.lineWidth = 1;
+  for (let x = 1; x < COLS; x++) {
+    ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke();
+  }
+  for (let y = 1; y < ROWS; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke();
+  }
+
+  ctx.fillStyle = COLOR.food;
+  for (const [x, y] of state.food) {
+    ctx.beginPath();
+    ctx.arc(x * CELL + CELL / 2, y * CELL + CELL / 2, CELL * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (const who of ['a', 'b']) {
+    const snake = state[who];
+    if (!snake.body.length) continue;
+    snake.body.forEach(([x, y], i) => {
+      ctx.fillStyle = i === 0
+        ? (who === 'a' ? COLOR.aHead : COLOR.bHead)
+        : (who === 'a' ? COLOR.aBody : COLOR.bBody);
+      ctx.beginPath();
+      ctx.roundRect(x * CELL + 1.5, y * CELL + 1.5, CELL - 3, CELL - 3, 5);
+      ctx.fill();
+    });
+  }
+
+  $('scoreA').textContent = state.a.score;
+  $('scoreB').textContent = state.b.score;
+}
+
+/* ---------- 按键 ---------- */
+window.addEventListener('keydown', (e) => {
+  const dir = KEYS[e.key];
+  if (!dir) return;
+  e.preventDefault();
+  if (playing && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'dir', d: dir }));
+  }
+});
+
+/* ---------- 按钮 ---------- */
+$('btnCreate').onclick = () => {
+  lobbyMsg.textContent = '';
+  ws.send(JSON.stringify({ type: 'create' }));
+};
+
+$('btnJoin').onclick = () => {
+  const code = $('roomInput').value.trim();
+  if (code.length !== 4) {
+    lobbyMsg.className = 'msg bad';
+    lobbyMsg.textContent = '请输入 4 位房间号';
+    return;
+  }
+  lobbyMsg.className = 'msg';
+  lobbyMsg.textContent = '正在加入…';
+  ws.send(JSON.stringify({ type: 'join', room: code }));
+};
+
+$('roomInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $('btnJoin').click();
+});
+
+$('btnAgain').onclick = () => {
+  overlay.hidden = true;
+  ws.send(JSON.stringify({ type: 'again' }));
+};
+</script>
+</body>
+</html>

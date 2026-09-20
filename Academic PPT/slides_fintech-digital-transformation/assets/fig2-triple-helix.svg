@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 680" width="1280" height="680" font-family="Microsoft YaHei, Noto Sans JP, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arwA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#800000"/>
+    </marker>
+    <marker id="arwB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C98F8F"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="680" fill="#ffffff"/>
+
+  <!-- 顶部：合力释放 -->
+  <rect x="90" y="44" width="1100" height="80" rx="12" fill="#800000"/>
+  <text x="640" y="78" text-anchor="middle" font-size="24" font-weight="700" fill="#ffffff">政策工具配套下，金融科技的数字化转型驱动力充分释放</text>
+  <text x="640" y="106" text-anchor="middle" font-size="16" fill="#F2DADA">金融科技对 DCG 的边际效应显著抬升</text>
+
+  <!-- 支柱一 -->
+  <g>
+    <rect x="110" y="200" width="340" height="62" rx="8" fill="#800000"/>
+    <text x="280" y="239" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">金融供给优化</text>
+
+    <rect x="110" y="282" width="340" height="100" rx="8" fill="#FDF3F3" stroke="#800000" stroke-width="1.5"/>
+    <text x="280" y="322" text-anchor="middle" font-size="19" font-weight="700" fill="#7A1F1F">国家金融改革综合试验区</text>
+    <rect x="228" y="338" width="104" height="30" rx="15" fill="#800000"/>
+    <text x="280" y="359" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">NCFR</text>
+
+    <rect x="110" y="402" width="340" height="82" rx="8" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="280" y="434" text-anchor="middle" font-size="17" fill="#6B6B6B">非试点区：不显著</text>
+    <text x="280" y="464" text-anchor="middle" font-size="16" font-weight="700" fill="#800000">试点区：显著为正</text>
+  </g>
+
+  <!-- 支柱二 -->
+  <g>
+    <rect x="470" y="200" width="340" height="62" rx="8" fill="#800000"/>
+    <text x="640" y="239" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">区域双向开放</text>
+
+    <rect x="470" y="282" width="340" height="100" rx="8" fill="#FDF3F3" stroke="#800000" stroke-width="1.5"/>
+    <text x="640" y="322" text-anchor="middle" font-size="19" font-weight="700" fill="#7A1F1F">自由贸易试验区</text>
+    <rect x="588" y="338" width="104" height="30" rx="15" fill="#800000"/>
+    <text x="640" y="359" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">FTZ</text>
+
+    <rect x="470" y="402" width="340" height="82" rx="8" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="640" y="434" text-anchor="middle" font-size="16" fill="#555555">两情形均显著</text>
+    <text x="640" y="464" text-anchor="middle" font-size="16" font-weight="700" fill="#800000">自贸区：弹性更大</text>
+  </g>
+
+  <!-- 支柱三 -->
+  <g>
+    <rect x="830" y="200" width="340" height="62" rx="8" fill="#800000"/>
+    <text x="1000" y="239" text-anchor="middle" font-size="21" font-weight="700" fill="#ffffff">前沿数字基础设施</text>
+
+    <rect x="830" y="282" width="340" height="100" rx="8" fill="#FDF3F3" stroke="#800000" stroke-width="1.5"/>
+    <text x="1000" y="322" text-anchor="middle" font-size="19" font-weight="700" fill="#7A1F1F">宽带中国试点城市</text>
+    <rect x="948" y="338" width="104" height="30" rx="15" fill="#800000"/>
+    <text x="1000" y="359" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">BBCP</text>
+
+    <rect x="830" y="402" width="340" height="82" rx="8" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="1000" y="434" text-anchor="middle" font-size="17" fill="#6B6B6B">非试点区：不显著</text>
+    <text x="1000" y="464" text-anchor="middle" font-size="16" font-weight="700" fill="#800000">试点区：显著为正</text>
+  </g>
+
+  <!-- 支柱向上汇入合力 -->
+  <line x1="280" y1="200" x2="280" y2="128" stroke="#800000" stroke-width="2.5" marker-end="url(#arwA)"/>
+  <line x1="640" y1="200" x2="640" y2="128" stroke="#800000" stroke-width="2.5" marker-end="url(#arwA)"/>
+  <line x1="1000" y1="200" x2="1000" y2="128" stroke="#800000" stroke-width="2.5" marker-end="url(#arwA)"/>
+
+  <!-- 向下落到企业数字化转型 -->
+  <line x1="280" y1="484" x2="280" y2="540" stroke="#C98F8F" stroke-width="2" marker-end="url(#arwB)"/>
+  <line x1="640" y1="484" x2="640" y2="540" stroke="#C98F8F" stroke-width="2" marker-end="url(#arwB)"/>
+  <line x1="1000" y1="484" x2="1000" y2="540" stroke="#C98F8F" stroke-width="2" marker-end="url(#arwB)"/>
+
+  <rect x="110" y="546" width="1060" height="80" rx="12" fill="#F7EDED" stroke="#800000" stroke-width="1.5"/>
+  <text x="640" y="583" text-anchor="middle" font-size="24" font-weight="700" fill="#800000">企业数字化转型水平提升</text>
+  <text x="640" y="611" text-anchor="middle" font-size="16" fill="#777777">三重工具并非各自为战，而是互为支撑的螺旋结构</text>
+</svg>

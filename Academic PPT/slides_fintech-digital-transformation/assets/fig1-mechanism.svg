@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 680" width="1280" height="680" font-family="Microsoft YaHei, Noto Sans JP, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#800000"/>
+    </marker>
+    <marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B08A8A"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="680" fill="#ffffff"/>
+
+  <!-- 左：金融科技供给端 -->
+  <rect x="30" y="200" width="220" height="200" rx="14" fill="#800000"/>
+  <text x="140" y="272" text-anchor="middle" font-size="27" font-weight="700" fill="#ffffff">金融科技</text>
+  <text x="140" y="306" text-anchor="middle" font-size="19" fill="#F2DADA">Fintech</text>
+  <line x1="70" y1="330" x2="210" y2="330" stroke="#C98F8F" stroke-width="1.5"/>
+  <text x="140" y="358" text-anchor="middle" font-size="15" fill="#F2DADA">省级公司数量</text>
+  <text x="140" y="382" text-anchor="middle" font-size="15" fill="#F2DADA">滞后一期 t−1</text>
+
+  <!-- 中：三条机制渠道 -->
+  <g>
+    <!-- 机制一 -->
+    <rect x="330" y="90" width="570" height="150" rx="10" fill="#FDF3F3" stroke="#800000" stroke-width="1.5"/>
+    <text x="356" y="126" font-size="17" fill="#6B6B6B">困局：不会转型</text>
+    <text x="356" y="160" font-size="21" font-weight="700" fill="#800000">信息优化机制</text>
+    <rect x="356" y="178" width="250" height="42" rx="21" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="481" y="205" text-anchor="middle" font-size="18" fill="#444444">信息披露指数 ICI</text>
+    <rect x="620" y="178" width="250" height="42" rx="21" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="745" y="205" text-anchor="middle" font-size="18" fill="#444444">正面报道占比 Positive</text>
+  </g>
+  <g>
+    <!-- 机制二 -->
+    <rect x="330" y="270" width="570" height="150" rx="10" fill="#FDF3F3" stroke="#800000" stroke-width="1.5"/>
+    <text x="356" y="306" font-size="17" fill="#6B6B6B">困局：不能转型</text>
+    <text x="356" y="340" font-size="21" font-weight="700" fill="#800000">财务改善机制</text>
+    <rect x="356" y="358" width="250" height="42" rx="21" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="481" y="385" text-anchor="middle" font-size="18" fill="#444444">流动比率 LR</text>
+    <rect x="620" y="358" width="250" height="42" rx="21" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="745" y="385" text-anchor="middle" font-size="18" fill="#444444">利息支出占比 Interest</text>
+  </g>
+  <g>
+    <!-- 机制三 -->
+    <rect x="330" y="450" width="570" height="150" rx="10" fill="#FDF3F3" stroke="#800000" stroke-width="1.5"/>
+    <text x="356" y="486" font-size="17" fill="#6B6B6B">困局：不敢转型</text>
+    <text x="356" y="520" font-size="21" font-weight="700" fill="#800000">风险管理机制</text>
+    <rect x="356" y="538" width="250" height="42" rx="21" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="481" y="565" text-anchor="middle" font-size="18" fill="#444444">风险处置能力 RT</text>
+    <rect x="620" y="538" width="250" height="42" rx="21" fill="#ffffff" stroke="#D9B3B3" stroke-width="1.2"/>
+    <text x="745" y="565" text-anchor="middle" font-size="18" fill="#444444">创新风险 IR</text>
+  </g>
+
+  <!-- 右：企业数字化转型 -->
+  <rect x="990" y="215" width="265" height="185" rx="14" fill="#800000"/>
+  <text x="1122" y="285" text-anchor="middle" font-size="25" font-weight="700" fill="#ffffff">企业数字化转型</text>
+  <text x="1122" y="322" text-anchor="middle" font-size="20" fill="#F2DADA">DCG</text>
+  <line x1="1030" y1="344" x2="1215" y2="344" stroke="#C98F8F" stroke-width="1.5"/>
+  <text x="1122" y="372" text-anchor="middle" font-size="15" fill="#F2DADA">年报关键词词频</text>
+
+  <!-- 连线：金融科技 → 三机制 -->
+  <path d="M 250 285 C 290 285 290 165 330 165" fill="none" stroke="#800000" stroke-width="2" marker-end="url(#arw)"/>
+  <path d="M 250 300 L 330 345" fill="none" stroke="#800000" stroke-width="2" marker-end="url(#arw)"/>
+  <path d="M 250 315 C 290 315 290 525 330 525" fill="none" stroke="#800000" stroke-width="2" marker-end="url(#arw)"/>
+
+  <!-- 连线：三机制 → 数字化转型 -->
+  <path d="M 900 165 C 945 165 945 290 990 290" fill="none" stroke="#800000" stroke-width="2" marker-end="url(#arw)"/>
+  <path d="M 900 345 L 990 308" fill="none" stroke="#800000" stroke-width="2" marker-end="url(#arw)"/>
+  <path d="M 900 525 C 945 525 945 325 990 325" fill="none" stroke="#800000" stroke-width="2" marker-end="url(#arw)"/>
+
+  <!-- 底部假说 -->
+  <rect x="290" y="622" width="700" height="46" rx="23" fill="#F7EDED" stroke="#D9B3B3" stroke-width="1.2"/>
+  <text x="640" y="652" text-anchor="middle" font-size="18" fill="#800000">
+    <tspan font-weight="700">核心假说 H1</tspan>
+    <tspan fill="#555555">　金融科技发展能够有效提升企业数字化转型水平</tspan>
+  </text>
+</svg>

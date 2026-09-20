@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="card">
+      <rect x="88" y="120" width="336" height="300" rx="48"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#2a78d6"/>
+  <rect x="88" y="120" width="336" height="300" rx="48" fill="#fcfcfb"/>
+  <g clip-path="url(#card)">
+    <rect x="88" y="120" width="336" height="78" fill="#eb6834"/>
+  </g>
+  <rect x="166" y="96" width="34" height="70" rx="17" fill="#fcfcfb"/>
+  <rect x="312" y="96" width="34" height="70" rx="17" fill="#fcfcfb"/>
+  <path d="M182 302 l50 50 l100 -108" fill="none" stroke="#2a78d6" stroke-width="44"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
